@@ -72,17 +72,16 @@ public class InventoryServiceImpl implements InventoryService {
     @Override
     public @NotNull InventoryItemResponse getInventoryItem(final String warehouseId, final String itemId) {
         return warehouseRepository.findById(UUID.fromString(warehouseId))
-                                  .map(warehouse -> inventoryItemRepository.findById(UUID.fromString(itemId)))
+                                  .map(warehouse -> inventoryItemRepository.findByWarehouseAndId(warehouse, UUID.fromString(itemId)))
                                   .filter(Optional::isPresent)
-                                  .map(inventoryItem -> {
-                                      var foundedInventoryItem = inventoryItem.get();
-                                      return InventoryItemResponse.builder()
-                                                                  .warehouseId(warehouseId)
-                                                                  .itemId(foundedInventoryItem.getId().toString())
-                                                                  .itemName(foundedInventoryItem.getName())
-                                                                  .itemType(foundedInventoryItem.getType())
-                                                                  .build();
-                                  })
+                                  .map(Optional::get)
+                                  .map(inventoryItem -> InventoryItemResponse.builder()
+                                                                             .warehouseId(warehouseId)
+                                                                             .itemId(inventoryItem.getId().toString())
+                                                                             .itemName(inventoryItem.getName())
+                                                                             .itemType(inventoryItem.getType())
+                                                                             .build()
+                                  )
                                   .orElseThrow(() -> new EntityNotFoundException(format("There is no item with itemId: %s and warehouseId: %s .", itemId, warehouseId)));
     }
 
@@ -91,13 +90,13 @@ public class InventoryServiceImpl implements InventoryService {
                                                               final String itemId, final InventoryItemUpdateRequestDTO updateRequest) {
 
         return warehouseRepository.findById(UUID.fromString(warehouseId))
-                                  .map(warehouse -> inventoryItemRepository.findById(UUID.fromString(itemId)))
+                                  .map(warehouse -> inventoryItemRepository.findByWarehouseAndId(warehouse, UUID.fromString(itemId)))
                                   .filter(Optional::isPresent)
+                                  .map(Optional::get)
                                   .map(inventoryItem -> {
-                                      var foundedInventoryItem = inventoryItem.get();
-                                      foundedInventoryItem.setName(updateRequest.getName());
-                                      foundedInventoryItem.setType(updateRequest.getType());
-                                      var updatedItem =  inventoryItemRepository.save(foundedInventoryItem);
+                                      inventoryItem.setName(updateRequest.getName());
+                                      inventoryItem.setType(updateRequest.getType());
+                                      var updatedItem =  inventoryItemRepository.save(inventoryItem);
                                       return InventoryItemResponse.builder()
                                                                   .warehouseId(warehouseId)
                                                                   .itemId(updatedItem.getId().toString())
