@@ -1,0 +1,15 @@
+server:
+  port: 8081
+
+spring:
+  application:
+    name: Warehouse Inventory Microservice
+  profiles:
+    active: swagger
+
+logging:
+  level:
+    com.example: DEBUG
+    org.springframework.web: DEBUG
+    ROOT: INFO
+
